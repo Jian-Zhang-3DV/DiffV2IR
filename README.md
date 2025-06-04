@@ -44,6 +44,8 @@ pip install -r requirements.txt
 - Download the IR-500K dataset here
 - https://pan.quark.cn/s/47a6b1a99d8e
 - Access Code：NWn2
+- or follow this link:
+- https://huggingface.co/datasets/Lidong26/IR-500K/tree/main
 ### 2.2 Use your own dataset
 - Our training scripts expect the dataset to be in the following format
 ```
