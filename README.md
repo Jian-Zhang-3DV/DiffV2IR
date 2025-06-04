@@ -83,6 +83,8 @@ python infer.py --ckpt your_ckpt --input input_folder --output output_folder
 We updated the pretrained checkpoint after Stage 1/2 of PLM for further training and the pretrained checkpoint of M3FD Dataset and FLIR Dataset mentioned in the paper.
 https://pan.quark.cn/s/e2f28304ee90
 Access Code：EWCz
+or
+https://huggingface.co/datasets/Lidong26/IR-500K/tree/main
 
 
 ## 6. Comments
