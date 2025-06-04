@@ -137,8 +137,8 @@ def main():
             factor = math.ceil(min(width, height) * factor / 64) * 64 / min(width, height)
             width = int((width * factor) // 64) * 64
             height = int((height * factor) // 64) * 64
-            input_image = ImageOps.fit(input_image, (width, height), method=Image.Resampling.LANCZOS)
-            input_seg = ImageOps.fit(input_seg, (width, height), method=Image.Resampling.LANCZOS)
+            input_image = ImageOps.fit(input_image, (width, height), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+            input_seg = ImageOps.fit(input_seg, (width, height), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
 
             if args.edit == "":
                 input_image.save(os.path.join(args.output,file))
