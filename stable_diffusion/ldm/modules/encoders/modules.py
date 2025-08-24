@@ -5,6 +5,17 @@ import clip
 from einops import rearrange, repeat
 from transformers import CLIPTokenizer, CLIPTextModel
 import kornia
+import os
+import sys
+
+# Add parent directory to path to import model_utils
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))))
+try:
+    from model_utils import load_clip_with_custom_path
+except ImportError:
+    # Fallback if model_utils is not available
+    def load_clip_with_custom_path(version='ViT-L/14', device='cpu', jit=False):
+        return clip.load(version, device=device, jit=jit)
 
 from ldm.modules.x_transformer import Encoder, TransformerWrapper  # TODO: can we directly rely on lucidrains code and simply add this as a reuirement? --> test
 
@@ -168,7 +179,7 @@ class FrozenCLIPTextEmbedder(nn.Module):
     """
     def __init__(self, version='ViT-L/14', device="cuda", max_length=77, n_repeat=1, normalize=True):
         super().__init__()
-        self.model, _ = clip.load(version, jit=False, device="cpu")
+        self.model, _ = load_clip_with_custom_path(version, jit=False, device="cpu")
         self.device = device
         self.max_length = max_length
         self.n_repeat = n_repeat
@@ -206,7 +217,7 @@ class FrozenClipImageEmbedder(nn.Module):
             antialias=False,
         ):
         super().__init__()
-        self.model, _ = clip.load(name=model, device=device, jit=jit)
+        self.model, _ = load_clip_with_custom_path(version=model, device=device, jit=jit)
 
         self.antialias = antialias
 

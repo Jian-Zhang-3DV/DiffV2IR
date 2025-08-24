@@ -22,6 +22,7 @@ from torchvision.transforms.functional import InterpolationMode
 from blip_models.blip import blip_decoder
 import json
 import os
+from model_paths import MODEL_PATHS, check_model_exists, download_model_if_needed
 
 
 
@@ -121,7 +122,18 @@ def main():
     model_wrap = K.external.CompVisDenoiser(model)
     model_wrap_cfg = CFGDenoiser(model_wrap)
     null_token = model.get_learned_conditioning([""])
-    blip_model = blip_decoder(pretrained="https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth", image_size=384, vit='base')
+    
+    # Use local BLIP model path if available, otherwise download
+    blip_model_path = MODEL_PATHS.get('blip')
+    if not check_model_exists('blip'):
+        print(f"BLIP model not found at {blip_model_path}")
+        print("Please download it manually or it will be downloaded from the URL")
+        # Fall back to URL download
+        blip_model_path = "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth"
+    else:
+        print(f"Using local BLIP model from {blip_model_path}")
+    
+    blip_model = blip_decoder(pretrained=blip_model_path, image_size=384, vit='base')
     blip_model.eval()
     seed = random.randint(0, 100000) if args.seed is None else args.seed
     for root, dirs, files in os.walk(args.input):
