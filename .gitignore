@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Data and model files
+*.pth
+*.pt
+*.ckpt
+*.pkl
+*.h5
+*.hdf5
+*.npy
+*.npz
+
+# Large files
+pretrained/
+SAM_models/*.pth
+checkpoints/*.pth
+data_for_diffv2ir/*/
+
+# Temporary and cache files
+*.tmp
+*.cache
+*.log
+
+# Images (keep only essential ones)
+*.png
+*.jpg
+*.jpeg
+!img/*.png
+!img/*.jpg
+!figures/*.png
+
+# Evaluation results (can be regenerated)
+evaluation/*.json
+evaluation/*.csv
+visualization/*.png
+experiments/*.png
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (keep only main ones)
+!README.md
+!INTEGRATION_GUIDE.md

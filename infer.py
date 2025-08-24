@@ -121,7 +121,7 @@ def main():
     model_wrap = K.external.CompVisDenoiser(model)
     model_wrap_cfg = CFGDenoiser(model_wrap)
     null_token = model.get_learned_conditioning([""])
-    blip_model = blip_decoder(pretrained="/data/wld/blip/BLIP-main/model__base_caption.pth", image_size=384, vit='base')
+    blip_model = blip_decoder(pretrained="https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth", image_size=384, vit='base')
     blip_model.eval()
     seed = random.randint(0, 100000) if args.seed is None else args.seed
     for root, dirs, files in os.walk(args.input):
