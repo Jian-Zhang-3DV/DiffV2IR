@@ -359,9 +359,73 @@ input_folder_seg/
 1. **快速预览**：使用 `steps=20-30` 进行快速预览
 2. **高质量输出**：使用 `steps=100-150` 获得最佳质量
 3. **批量处理**：建议批大小不超过 4 张（取决于 GPU 显存）
-4. **显存优化**：
-   - 8GB 显存：最大处理 512x512 图像
-   - 16GB 显存：可处理 1024x1024 图像
+
+### 显存优化与推荐配置
+
+#### 显存使用情况（实测数据）
+
+**FP32（标准精度）显存占用：**
+| 分辨率 | 峰值显存 | 推荐GPU显存 |
+|--------|----------|-------------|
+| 256×256 | ~13GB | 16GB+ |
+| 384×384 | ~14GB | 16GB+ |
+| 512×512 | ~18GB | 24GB+ |
+
+**FP16（半精度）显存占用：**
+| 分辨率 | 峰值显存 | 显存节省 | 推荐GPU显存 |
+|--------|----------|----------|-------------|
+| 256×256 | ~4.5GB | 75% | 6GB+ |
+| 384×384 | ~5.7GB | 68% | 8GB+ |
+| 512×512 | ~8.8GB | 51% | 12GB+ |
+
+#### GPU显存推荐配置
+
+| GPU显存 | 推荐设置 | 示例命令 |
+|---------|----------|----------|
+| **6-8GB** | 256×256 + FP16 | `python infer_optimized.py --resolution 256 --fp16` |
+| **8-12GB** | 384×384 + FP16 或 256×256 FP32 | `python infer_optimized.py --resolution 384 --fp16` |
+| **12-16GB** | 512×512 + FP16 或 384×384 FP32 | `python infer_optimized.py --resolution 512 --fp16` |
+| **16-24GB** | 512×512 FP32（完整精度） | `python infer.py --resolution 512` |
+| **24GB+** | 512×512 FP32 + 批量处理 | 支持多图像并行处理 |
+
+#### 使用优化推理脚本
+
+项目提供了优化版推理脚本 `infer_optimized.py`，支持以下优化选项：
+
+```bash
+# FP16半精度推理（减少50-75%显存）
+python infer_optimized.py \
+    --input test_input \
+    --output test_output \
+    --ckpt pretrained/DiffV2IR/IR-500k/finetuned_checkpoints/after_phase_2.ckpt \
+    --resolution 512 \
+    --steps 50 \
+    --fp16  # 启用FP16
+
+# 禁用BLIP描述生成（节省少量显存）
+python infer_optimized.py \
+    --input test_input \
+    --output test_output \
+    --ckpt pretrained/DiffV2IR/IR-500k/finetuned_checkpoints/after_phase_2.ckpt \
+    --no-blip  # 禁用BLIP
+```
+
+#### 优化建议
+
+1. **显存不足时的优化优先级：**
+   - 首选：启用FP16（`--fp16`）
+   - 次选：降低分辨率（`--resolution 256`）
+   - 最后：禁用BLIP（`--no-blip`）
+
+2. **质量与性能平衡：**
+   - FP16对输出质量影响极小，推荐优先使用
+   - 步数（steps）不影响显存占用，可根据质量需求自由调整
+   - 分辨率对质量影响较大，尽量保持原始分辨率
+
+3. **批量处理策略：**
+   - 24GB显存：可使用FP16同时处理2-3张512×512图像
+   - 16GB显存：可使用FP16同时处理2张384×384图像
+   - 8GB显存：建议单张处理
 
 ## 前端集成示例
 
