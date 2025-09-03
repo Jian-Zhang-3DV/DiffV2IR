@@ -218,33 +218,80 @@ python infer.py \
 2. 需要对应的分割图文件夹，命名为 `<input>_seg`
 3. 分割图必须是 PNG 格式，文件名与输入图像对应（去除扩展名）
 
-### 2. Python API 封装
+### 2. Python API 封装 (diffv2ir_api.py)
+
+项目提供了封装好的 Python API (`diffv2ir_api.py`)，简化集成过程。
+
+#### 简单函数接口
+
+```python
+from diffv2ir_api import diffv2ir_convert
+
+# 最简单的调用方式
+output_path = diffv2ir_convert(
+    input_path="input.jpg",
+    output_path="output.png",  # 可选，不提供会自动生成 *_infrared.png
+    checkpoint_path="pretrained/DiffV2IR/IR-500k/finetuned_checkpoints/after_phase_2.ckpt",
+    resolution=512,
+    steps=50,
+    use_fp16=True,  # 使用半精度减少显存
+    seed=42  # 固定种子以便复现
+)
+print(f"输出路径: {output_path}")
+```
+
+#### 类接口（更多控制）
 
 ```python
 from diffv2ir_api import DiffV2IR
 
-# 初始化模型
+# 初始化模型（只需一次）
 model = DiffV2IR(
     config_path="configs/generate.yaml",
     checkpoint_path="pretrained/DiffV2IR/IR-500k/finetuned_checkpoints/after_phase_2.ckpt",
-    device="cuda"
+    device="cuda",
+    use_fp16=True,  # 启用半精度
+    load_blip=True   # 加载 BLIP 用于图像描述
 )
 
 # 单张图像转换
-result = model.convert(
-    input_image_path="path/to/visible_image.jpg",
-    output_path="path/to/infrared_output.png",
-    steps=50,  # 去噪步数，默认100
-    seed=None  # 随机种子，None表示随机
+output_path = model.convert(
+    input_path="input.jpg",
+    output_path="output.png",  # 可选
+    mask_path="mask.png",      # 可选的分割图
+    resolution=512,
+    steps=50,
+    cfg_text=7.5,     # 文本引导强度
+    cfg_image=1.5,    # 图像条件强度
+    cfg_seg=1.5,      # 分割图引导强度
+    seed=None,        # None 表示随机
+    edit_prompt=None  # 自定义提示词，None 则自动生成
 )
 
 # 批量转换
 results = model.batch_convert(
-    input_folder="path/to/input_folder",
-    output_folder="path/to/output_folder",
+    input_folder="input_folder",
+    output_folder="output_folder",
+    mask_folder="mask_folder",  # 可选
+    resolution=512,
     steps=50
 )
+
+# results 是一个字典: {filename: output_path}
+for input_name, output_path in results.items():
+    if output_path:
+        print(f"✓ {input_name} -> {output_path}")
+    else:
+        print(f"✗ {input_name} 转换失败")
 ```
+
+#### API 特点
+
+- **自动输出路径生成**：如果不指定 output_path，会自动生成 `*_infrared.png`
+- **返回输出路径**：所有函数都返回生成的图像路径，方便后续处理
+- **内存管理**：自动清理显存，支持 FP16 模式减少内存占用
+- **灵活参数**：所有参数都可配置，有合理的默认值
+- **错误处理**：包含完整的错误处理和提示信息
 
 ### 3. REST API 服务
 
@@ -800,6 +847,46 @@ def convert_image_task(input_path, output_path, **kwargs):
     return model.convert(input_path, output_path, **kwargs)
 ```
 
+## 测试与验证
+
+### 功能测试
+
+项目提供了测试脚本来验证 API 功能：
+
+```bash
+# 测试 API 封装
+python test_api.py
+
+# 简单功能测试
+python test_simple.py
+
+# 直接推理测试
+python test_direct.py
+```
+
+### 测试数据
+
+项目包含测试数据在 `data_for_diffv2ir/` 目录：
+- `input/` - 可见光图像
+- `input_seg/` - 对应的分割图
+- `ground_truth/` - 参考红外图像
+
+### 快速验证
+
+```python
+# 快速测试单张图像
+from diffv2ir_api import diffv2ir_convert
+
+output = diffv2ir_convert(
+    input_path="data_for_diffv2ir/input/DJI_0061.png",
+    checkpoint_path="pretrained/DiffV2IR/IR-500k/finetuned_checkpoints/after_phase_2.ckpt",
+    steps=20,  # 少量步数快速测试
+    resolution=256,  # 低分辨率加速
+    use_fp16=True
+)
+print(f"生成成功: {output}")
+```
+
 ## 最佳实践
 
 1. **模型预热**：服务启动后先执行一次推理，避免首次请求延迟
@@ -807,6 +894,7 @@ def convert_image_task(input_path, output_path, **kwargs):
 3. **异步处理**：使用消息队列处理大批量转换任务
 4. **健康检查**：实现 `/health` 端点监控服务状态
 5. **版本管理**：为不同模型版本提供独立的端点
+6. **依赖管理**：使用固定版本的依赖包，避免版本冲突
 
 ## 快速检查清单
 
